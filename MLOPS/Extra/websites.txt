@@ -1,0 +1,8 @@
+https://www.tensorflow.org/tfx/tutorials/tfx/cloud-ai-platform-pipelines
+https://medium.com/searce/deploy-an-end-to-end-tensorflow-pipeline-on-kubeflow-688f769a4698
+https://github.com/kubeflow
+https://data.cityofchicago.org/Transportation/Taxi-Trips/wrvz-psew/data
+console.cloud.google.com --gmail mlops.cap.demo@gmail.com
+https://www.machinelearningmindset.com/linear-regression-with-tensorflow/
+https://www.explorium.ai/blog/understanding-and-handling-data-and-concept-drift/
+https://www.poverty.ac.uk/system/files/townsend-book-pdfs/PIUK/piuk-chapter15.pdf
