@@ -1,0 +1,6 @@
+steps:
+    - name: 'gcr.io/cloud-builders/docker'
+      dir:  'containers/pipeline'   # remove-for-manual
+      args: [ 'build', '-t', 'gcr.io/taxi-mlops-demo/mlops-demo-pipeline:latest', '.' ]
+images:
+    - 'gcr.io/taxi-mlops-demo/mlops-demo-pipeline:latest'

@@ -1,0 +1,6 @@
+tensorflow
+pandas
+numpy
+datetime
+keras
+google-cloud-storage
