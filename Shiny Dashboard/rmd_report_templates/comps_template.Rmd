@@ -1,0 +1,116 @@
+---
+title: ' '
+output:
+  html_document:
+    toc: no
+    df_print: paged
+  pdf_document:
+    toc: no
+    template: default.latex
+  word_document:
+    toc: no
+params:
+  report_title: NA
+  dt_start: '2020-12-04'
+  dt_end: '2020-12-18'
+geometry: left=0.5cm,right=0.5cm,top=2cm,bottom=1cm
+graphics: yes
+---
+
+\definecolor{hightlightColor}{HTML}{D3D3D3}
+
+\captionsetup[table]{labelformat=empty}
+
+\huge `r paste0("MLOps Report for ",format(Sys.Date(),"%B %d, %Y"))`
+  
+  
+```{r, echo=F,message=F,warning=F}
+require(dplyr)
+require(knitr)
+require(kableExtra)
+require(stringr)
+require(lubridate)
+require(ggplot2)
+```
+
+```{r, echo=FALSE, error=F, warning=F, message=F}
+
+#Data Prep:
+    dta <- data.frame(dt = seq.Date(from = as.Date("2020-12-01"),
+                                    to = as.Date("2020-12-31"),
+                                    by = "1 day"),
+                      mae = c(4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5,
+                              3.6, 4.0, 4.2, 4.6, 4.7, 4.9, 5.2,
+                              4.3, 4.8, 7.2, 10.3, 4.0, 4.5, 4.3,
+                              3.2, 3.3, 3.5, 3.5, 4.2, 4.5, 4.5,
+                              4.0, 10.8, 3.3))
+    
+    #print(input$input_deployment_date_range)
+    
+    dta <- dta %>% 
+      filter(params$dt_start <= dt & dt <= params$dt_end) %>% 
+      mutate(mae_lag = lag(mae)) %>% 
+      mutate(flg = mae_lag > mae)
+    
+    drops <- dta %>% filter(flg) %>% mutate(dt = dt-days(1))
+    
+    dta <- bind_rows(dta %>% mutate(flg = F), drops) %>% arrange(dt, desc(mae)) %>% mutate(grp = cumsum(flg))
+    
+    areas <- bind_rows(dta %>% mutate(type = "low", val = 5),
+                       dta %>% mutate(type = "mid", val = 5),
+                       dta %>% mutate(type = "high", val = 5))
+    
+    drops <- dta %>% 
+      mutate(mae_pre = lag(mae)) %>% 
+      filter(mae_pre > mae) %>% 
+      mutate(col = ifelse(mae <= 5, "green",ifelse(mae<=10,"yellow","red")))
+    
+    
+    model_ranges <- dta %>% 
+      group_by(grp) %>% 
+      summarize(starts = first(dt), ends = last(dt), color = first(grp %% 2 + 1)) %>% 
+      mutate(col = case_when(color == 1 ~ "model1",
+                             TRUE ~ "model2")) %>% 
+      mutate(col = ifelse(starts == "2020-12-21","Christmas Holiday Model",col)) %>% 
+      mutate(col = factor(col, levels = unique(col), ordered = T))
+    
+    
+    #Plot:
+    p <- ggplot(dta)+#, aes(x = dt, y = mae))+
+      #geom_area(data = areas, aes(color = type, fill = type))+
+      geom_rect(data = areas, aes(xmin = as.Date(params$dt_start), xmax = as.Date(params$dt_end), ymin = 0, ymax = 5),
+                fill = "#2F5241", alpha = 0.1)+
+      geom_rect(data = areas, aes(xmin = as.Date(params$dt_start), xmax = as.Date(params$dt_end), ymin = 5, ymax = 10),
+                fill = "#495241", alpha = 0.1)+
+      geom_rect(data = areas, aes(xmin = as.Date(params$dt_start), xmax = as.Date(params$dt_end), ymin = 10, ymax = 15),
+                fill = "#493841", alpha = 0.1)
+    
+    for(i in unique(dta$grp)){
+      p <- p + geom_line(data = dta %>% filter(grp==i), aes(x = dt, y = mae), color = "white")
+    }
+    
+    p <- p + geom_rect(data = model_ranges, aes(xmin =starts, xmax = ends, ymin = -2, ymax =0, fill = col))+
+      #scale_fill_manual(values = colorRampPalette(brewer.pal(8, "Set2"))(10)) #the 10 here is how many resulting colors
+      scale_fill_manual(values = colorRampPalette(c("grey80", "#004d78"))(length(unique(model_ranges$col)))) #the 10 here is how many resulting colors
+      scale_fill_brewer(palette = "Blues")
+      
+    p <- p + #geom_line(color = "white")+
+      geom_point(data = drops, aes(x = dt, y = mae), color = "white", size = 2.5)+
+      #scale_x_date(breaks = sort(dta$dt[which(1:nrow(dta) %% 7 == 0)]), date_labels = "%b %d, %Y")+
+      scale_x_date(breaks = drops$dt, date_labels = "%b %d, %Y")+
+      theme(plot.background = element_rect(fill = "#00000000"),
+            panel.background = element_rect(fill="#00000000"),
+            panel.grid.major = element_line(colour = "#808080"),
+            axis.text.x = element_text(colour = "#808080", angle = 45, hjust = 1),
+            axis.text.y = element_text(colour = "#808080"),
+            axis.title.x = element_blank(),
+            axis.title.y = element_text(colour = "#808080"),
+            legend.title = element_blank(),
+            legend.position = "bottom"
+      )
+
+    suppressMessages(p)
+
+```
+
+
