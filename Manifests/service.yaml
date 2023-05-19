@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    run: cloud-sql-proxy-service
+  name: cloud-sql-proxy-service
+  namespace: ml-retraining
+spec:
+  ports:
+  - port: 5432
+    protocol: TCP
+    targetPort: 5432
+  selector:
+    run: cloud-sql-proxy

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: cloud-sql-proxy
+  name: cloud-sql-proxy
+  namespace: ml-retraining
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: cloud-sql-proxy
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        run: cloud-sql-proxy
+    spec:
+      containers:
+      - command:
+        - /cloud_sql_proxy
+        - -instances=taxi-fare-predictor-kf:us-central1:taxi-fare-predictor-kf=tcp:0.0.0.0:5432
+        image: eu.gcr.io/cloud-airflow-releaser/composer-cloudsql-proxy:cloud_composer_service_2020-10-18-RC0
+        imagePullPolicy: IfNotPresent
+        name: airflow-sqlproxy
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool
+      restartPolicy: Always
